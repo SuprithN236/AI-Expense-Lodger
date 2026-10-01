@@ -65,5 +65,7 @@ app:
     # Off by default; events are sent fire-and-forget and dropped if the engine is unavailable.
     enabled: ${LOG_MONITORING_ENABLED:false}
     url: ${LOG_MONITORING_URL:http://localhost:8080/api/v1/logs/submit}
+    # The engine's INGEST_API_KEY, sent as the X-API-Key header.
+    api-key: ${LOG_MONITORING_API_KEY:local-dev-ingest-key}
     timeout: ${LOG_MONITORING_TIMEOUT:PT2S}
     max-in-flight: ${LOG_MONITORING_MAX_IN_FLIGHT:50}

@@ -18,6 +18,22 @@ cd frontend && npm install && npm run start   # start the UI on http://localhost
 
 Set `OPENAI_API_KEY` before starting the backend to enable the AI features.
 
+## Log monitoring
+
+The backend can forward operational events to the Log Monitoring Engine. It sends:
+- sign-ins and failed sign-ins
+- expenses recorded and reversed
+- AI quota rejections and AI provider failures
+- unhandled errors
+
+Events carry only user, group and transaction ids. They are sent without blocking requests and are dropped if the engine can't be reached. It is off by default. To turn it on, set:
+
+```bash
+LOG_MONITORING_ENABLED=true
+LOG_MONITORING_URL=https://<log-engine>.onrender.com/api/v1/logs/submit
+LOG_MONITORING_API_KEY=<the engine's INGEST_API_KEY>
+```
+
 ## Deploy
 
 Build and run the production image:

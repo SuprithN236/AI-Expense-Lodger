@@ -10,10 +10,11 @@ import java.time.Duration;
  * Engine (e.g. Render) never try to reach one.
  */
 @ConfigurationProperties(prefix = "app.log-monitoring")
-public record LogMonitoringProperties(boolean enabled, URI url, Duration timeout, int maxInFlight) {
+public record LogMonitoringProperties(boolean enabled, URI url, String apiKey, Duration timeout, int maxInFlight) {
 
     public LogMonitoringProperties {
         url = url != null ? url : URI.create("http://localhost:8080/api/v1/logs/submit");
+        apiKey = apiKey != null ? apiKey : "";
         timeout = timeout != null ? timeout : Duration.ofSeconds(2);
         maxInFlight = maxInFlight > 0 ? maxInFlight : 50;
     }

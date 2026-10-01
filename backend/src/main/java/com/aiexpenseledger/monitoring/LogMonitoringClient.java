@@ -78,6 +78,7 @@ public class LogMonitoringClient {
             HttpRequest request = HttpRequest.newBuilder(properties.url())
                     .timeout(properties.timeout())
                     .header("Content-Type", "application/json")
+                    .header("X-API-Key", properties.apiKey())
                     .POST(HttpRequest.BodyPublishers.ofByteArray(body))
                     .build();
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding())
