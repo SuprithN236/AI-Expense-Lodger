@@ -1,0 +1,15 @@
+# Never ship local secrets or machine-specific overrides in the image.
+.env
+.env.*
+**/.env.local
+backend/config/
+
+# Build output and dependencies are recreated inside the image.
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+.git/
+.idea/
+.vscode/
+**/.DS_Store

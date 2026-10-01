@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-expense-ledger-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: expense_ledger
+      POSTGRES_USER: ledger
+      POSTGRES_PASSWORD: ledger
+    ports:
+      # Host port defaults to 5432; override with POSTGRES_PORT if a local Postgres already uses it.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ledger-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledger -d expense_ledger"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  ledger-data:

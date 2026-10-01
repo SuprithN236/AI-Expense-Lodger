@@ -1,0 +1,21 @@
+# Render Blueprint: one free Docker web service. The database is external (e.g. Neon free Postgres).
+# Values marked `sync: false` are entered in the Render dashboard and are never stored in git.
+services:
+  - type: web
+    name: ai-expense-ledger
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true

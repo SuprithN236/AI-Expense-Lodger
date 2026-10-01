@@ -1,0 +1,62 @@
+server:
+  # PORT is what hosting platforms such as Render inject; SERVER_PORT is for local overrides.
+  port: ${PORT:${SERVER_PORT:8080}}
+  error:
+    include-message: always
+  # Honour X-Forwarded-* headers from the host's TLS-terminating proxy.
+  forward-headers-strategy: framework
+  compression:
+    enabled: true
+
+spring:
+  application:
+    name: ai-expense-ledger
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/expense_ledger}
+    username: ${DB_USERNAME:ledger}
+    password: ${DB_PASSWORD:ledger}
+    hikari:
+      # Kept small so the app fits free-tier database connection limits.
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Schema is owned by Flyway (src/main/resources/db/migration); Hibernate only verifies it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+  ai:
+    openai:
+      # The app boots without a key; AI endpoints answer 503 until OPENAI_API_KEY is set.
+      api-key: ${OPENAI_API_KEY:not-configured}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+          temperature: 0.1
+
+app:
+  ai:
+    # Spend caps on LLM calls (UTC day). Each question or receipt scan counts as one request.
+    daily-limit-per-user: ${AI_DAILY_LIMIT_PER_USER:20}
+    daily-limit-global: ${AI_DAILY_LIMIT_GLOBAL:200}
+  jwt:
+    # Base64-encoded secret of at least 32 bytes (e.g. `openssl rand -base64 48`).
+    # When empty, an ephemeral key is generated at startup and tokens do not survive a restart.
+    secret: ${JWT_SECRET:}
+    expiration: ${JWT_EXPIRATION:PT12H}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
