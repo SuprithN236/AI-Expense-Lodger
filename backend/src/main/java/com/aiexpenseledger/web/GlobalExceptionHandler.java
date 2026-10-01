@@ -7,6 +7,8 @@ import com.aiexpenseledger.exception.EmailAlreadyRegisteredException;
 import com.aiexpenseledger.exception.GroupAccessDeniedException;
 import com.aiexpenseledger.exception.LedgerValidationException;
 import com.aiexpenseledger.exception.ResourceNotFoundException;
+import com.aiexpenseledger.monitoring.LogMonitoringClient;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,12 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private final LogMonitoringClient monitoring;
+
+    public GlobalExceptionHandler(LogMonitoringClient monitoring) {
+        this.monitoring = monitoring;
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException e) {
@@ -65,6 +73,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ProblemDetail handleBadCredentials(BadCredentialsException e) {
+        monitoring.warning(LogMonitoringClient.SERVICE_AUTH, "Failed sign-in attempt");
         return problem(HttpStatus.UNAUTHORIZED, e.getMessage());
     }
 
@@ -75,6 +84,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AiQuotaExceededException.class)
     public ProblemDetail handleAiQuota(AiQuotaExceededException e) {
+        monitoring.warning(LogMonitoringClient.SERVICE_AI, "AI request rejected by daily cap: " + e.getMessage());
         return problem(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
     }
 
@@ -94,8 +104,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleUnexpected(Exception e) {
+    public ProblemDetail handleUnexpected(Exception e, HttpServletRequest request) {
         log.error("Unhandled error", e);
+        monitoring.critical(LogMonitoringClient.SERVICE_API,
+                "Unhandled error on " + request.getMethod() + " " + request.getRequestURI(), e);
         return problem(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 

@@ -3,6 +3,7 @@ package com.aiexpenseledger.web;
 import com.aiexpenseledger.domain.Group;
 import com.aiexpenseledger.domain.LedgerTransaction;
 import com.aiexpenseledger.domain.User;
+import com.aiexpenseledger.monitoring.LogMonitoringClient;
 import com.aiexpenseledger.security.AuthenticatedUser;
 import com.aiexpenseledger.service.GroupService;
 import com.aiexpenseledger.service.LedgerService;
@@ -47,10 +48,12 @@ public class LedgerController {
 
     private final LedgerService ledgerService;
     private final GroupService groupService;
+    private final LogMonitoringClient monitoring;
 
-    public LedgerController(LedgerService ledgerService, GroupService groupService) {
+    public LedgerController(LedgerService ledgerService, GroupService groupService, LogMonitoringClient monitoring) {
         this.ledgerService = ledgerService;
         this.groupService = groupService;
+        this.monitoring = monitoring;
     }
 
     @PostMapping("/expenses")
@@ -65,6 +68,8 @@ public class LedgerController {
 
         LedgerEntry entry = ledgerService.logExpense(groupId, payerId, request.totalAmount(), splits,
                 request.description(), request.date(), request.idempotencyKey(), user.id());
+        monitoring.info(LogMonitoringClient.SERVICE_LEDGER, "Expense " + entry.transaction().getId()
+                + " recorded in group " + groupId + " by user " + user.id());
         return toResponse(entry, memberEmails(groupId, user.id()));
     }
 
@@ -101,6 +106,8 @@ public class LedgerController {
                                                   @PathVariable Long transactionId,
                                                   @Valid @RequestBody ReverseTransactionRequest request) {
         LedgerEntry entry = ledgerService.reverseTransaction(groupId, transactionId, request.idempotencyKey(), user.id());
+        monitoring.info(LogMonitoringClient.SERVICE_LEDGER, "Transaction " + transactionId + " reversed by entry "
+                + entry.transaction().getId() + " in group " + groupId + " by user " + user.id());
         return toResponse(entry, memberEmails(groupId, user.id()));
     }
 

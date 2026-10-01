@@ -60,3 +60,10 @@ app:
     expiration: ${JWT_EXPIRATION:PT12H}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+  log-monitoring:
+    # Forwards sign-ins, expense writes, AI failures and unhandled errors to the Log Monitoring Engine.
+    # Off by default; events are sent fire-and-forget and dropped if the engine is unavailable.
+    enabled: ${LOG_MONITORING_ENABLED:false}
+    url: ${LOG_MONITORING_URL:http://localhost:8080/api/v1/logs/submit}
+    timeout: ${LOG_MONITORING_TIMEOUT:PT2S}
+    max-in-flight: ${LOG_MONITORING_MAX_IN_FLIGHT:50}

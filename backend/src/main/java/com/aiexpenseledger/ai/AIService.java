@@ -3,6 +3,7 @@ package com.aiexpenseledger.ai;
 import com.aiexpenseledger.domain.Group;
 import com.aiexpenseledger.domain.User;
 import com.aiexpenseledger.exception.AiUnavailableException;
+import com.aiexpenseledger.monitoring.LogMonitoringClient;
 import com.aiexpenseledger.service.GroupService;
 import com.aiexpenseledger.service.LedgerService;
 import org.slf4j.Logger;
@@ -66,6 +67,7 @@ public class AIService {
     private final LedgerService ledgerService;
     private final GroupService groupService;
     private final AiUsageLimiter usageLimiter;
+    private final LogMonitoringClient monitoring;
     private final Clock clock;
     private final boolean configured;
 
@@ -73,11 +75,13 @@ public class AIService {
                      LedgerService ledgerService,
                      GroupService groupService,
                      AiUsageLimiter usageLimiter,
+                     LogMonitoringClient monitoring,
                      @Value("${spring.ai.openai.api-key:}") String apiKey) {
         this.chatClient = chatClientBuilder.build();
         this.ledgerService = ledgerService;
         this.groupService = groupService;
         this.usageLimiter = usageLimiter;
+        this.monitoring = monitoring;
         this.clock = Clock.systemDefaultZone();
         this.configured = StringUtils.hasText(apiKey) && !UNCONFIGURED_KEY.equals(apiKey);
         if (!configured) {
@@ -140,6 +144,7 @@ public class AIService {
             throw e;
         } catch (RuntimeException e) {
             log.error("AI provider call failed", e);
+            monitoring.critical(LogMonitoringClient.SERVICE_AI, "AI provider call failed for user " + userId, e);
             throw new AiUnavailableException("The AI provider request failed. Please try again.", e);
         }
     }

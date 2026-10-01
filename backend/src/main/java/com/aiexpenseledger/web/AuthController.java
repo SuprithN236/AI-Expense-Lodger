@@ -1,5 +1,6 @@
 package com.aiexpenseledger.web;
 
+import com.aiexpenseledger.monitoring.LogMonitoringClient;
 import com.aiexpenseledger.service.AuthService;
 import com.aiexpenseledger.service.AuthService.AuthResult;
 import com.aiexpenseledger.web.dto.AuthResponse;
@@ -19,20 +20,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final LogMonitoringClient monitoring;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, LogMonitoringClient monitoring) {
         this.authService = authService;
+        this.monitoring = monitoring;
     }
 
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public AuthResponse signup(@Valid @RequestBody SignupRequest request) {
-        return toResponse(authService.signup(request.email(), request.password()));
+        AuthResult result = authService.signup(request.email(), request.password());
+        monitoring.info(LogMonitoringClient.SERVICE_AUTH, "New account registered: user " + result.user().getId());
+        return toResponse(result);
     }
 
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-        return toResponse(authService.login(request.email(), request.password()));
+        AuthResult result = authService.login(request.email(), request.password());
+        monitoring.info(LogMonitoringClient.SERVICE_AUTH, "User " + result.user().getId() + " signed in");
+        return toResponse(result);
     }
 
     private static AuthResponse toResponse(AuthResult result) {
